@@ -239,12 +239,12 @@ pub struct Signature {
 }
 
 mod secp256k1 {
-    use std::sync::{Arc, Mutex};
-
+    use hex::encode;
     use k256::ecdsa::{
         signature::{SignerMut, Verifier},
         Signature as Secp256K1Signature, SigningKey,
     };
+    use std::sync::{Arc, Mutex};
 
     use super::*;
 
@@ -293,15 +293,23 @@ mod secp256k1 {
         }
 
         fn verify(&self, key: &VerifyingKey, msg: &[u8], sig: &[u8]) -> Result<(), SignatureError> {
+            println!("secp256k1 verifier verify");
             if key.alg != KeyAlgId::K256 {
                 return Err(SignatureError("key algorithm is not k256".to_string()));
             }
 
             let key = k256::ecdsa::VerifyingKey::from_sec1_bytes(&key.data)
                 .map_err(|_| SignatureError("invalid k256 key".to_string()))?;
+            println!(
+                "key: to encoded point {:?}",
+                key.to_encoded_point(false).to_string()
+            );
 
+            println!("sig: to bytes {:?}", encode(sig));
             let sig = Secp256K1Signature::from_slice(sig)
                 .map_err(|_| SignatureError("invalid secp256k1 signature".to_string()))?;
+
+            println!("msg: to bytes {:?}", encode(msg));
 
             key.verify(msg, &sig).map_err(|_| {
                 SignatureError("secp256k1 signature verification failed".to_string())
@@ -369,6 +377,7 @@ mod secp256r1 {
         }
 
         fn verify(&self, key: &VerifyingKey, msg: &[u8], sig: &[u8]) -> Result<(), SignatureError> {
+            println!("secp256r1 verifier verify");
             if key.alg != KeyAlgId::P256 {
                 return Err(SignatureError("key algorithm is not p256".to_string()));
             }
@@ -469,6 +478,7 @@ mod secp256k1eth {
         }
 
         fn verify(&self, key: &VerifyingKey, msg: &[u8], sig: &[u8]) -> Result<(), SignatureError> {
+            println!("secp256k1eth verifier verify");
             if key.alg != KeyAlgId::K256 {
                 return Err(SignatureError("key algorithm is not k256".to_string()));
             }

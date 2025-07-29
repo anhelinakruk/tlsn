@@ -48,6 +48,10 @@ name = "attestation_prove"
 path = "attestation/prove.rs"
 
 [[example]]
+name = "attestation_prove_new"
+path = "attestation/prove_new.rs"
+
+[[example]]
 name = "attestation_present"
 path = "attestation/present.rs"
 
@@ -58,3 +62,7 @@ path = "attestation/verify.rs"
 [[example]]
 name = "interactive"
 path = "interactive/interactive.rs"
+
+[[example]]
+name = "explain"
+path = "attestation/explain.rs"

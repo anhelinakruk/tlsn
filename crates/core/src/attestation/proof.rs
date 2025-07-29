@@ -121,11 +121,15 @@ impl BodyProof {
             .get(&header.root.alg)
             .map_err(|e| AttestationError::new(ErrorKind::Provider, e))?;
 
+        println!("BODY FIELDS: {:?}", self.body);
+
         let fields = self
             .body
             .hash_fields(hasher)
             .into_iter()
             .map(|(id, hash)| (id.0 as usize, hash));
+
+        println!("FIELDS: {:?}", fields);
 
         self.proof
             .verify(hasher, &header.root, fields)

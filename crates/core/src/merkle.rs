@@ -40,11 +40,15 @@ impl MerkleProof {
         leaves: impl IntoIterator<Item = (usize, Hash)>,
     ) -> Result<(), MerkleError> {
         let mut leaves = leaves.into_iter().collect::<Vec<_>>();
+        println!("HASHER: {:?}", hasher.id());
 
         // Sort by index
         leaves.sort_by_key(|(idx, _)| *idx);
 
         let (indices, leaves): (Vec<_>, Vec<_>) = leaves.into_iter().unzip();
+
+        println!("INDICES: {:?}", indices);
+        println!("LEAVES: {:?}", leaves);
 
         if indices.iter().contains_dups() {
             return Err(MerkleError::new("duplicate leaf indices provided"));

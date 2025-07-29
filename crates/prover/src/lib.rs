@@ -518,6 +518,7 @@ impl Prover<state::Committed> {
             transcript,
             ..
         } = &mut self.state;
+        println!("server_cert_data: {:?}", server_cert_data);
 
         let mut builder = Request::builder(config);
 

@@ -13,7 +13,7 @@ workspace = true
 
 [features]
 default = []
-fixtures = ["dep:hex", "dep:tlsn-data-fixtures"]
+fixtures = ["dep:tlsn-data-fixtures"]
 
 [dependencies]
 tlsn-data-fixtures = { workspace = true, optional = true }
@@ -24,7 +24,7 @@ rangeset = { workspace = true, features = ["serde"] }
 bcs = { workspace = true }
 bimap = { version = "0.6", features = ["serde"] }
 blake3 = { workspace = true }
-hex = { workspace = true, optional = true }
+hex = { workspace = true }
 k256 = { workspace = true }
 opaque-debug = { workspace = true }
 p256 = { workspace = true, features = ["serde"] }
