@@ -139,11 +139,13 @@ impl MerkleTree {
             "one or more provided indices are out of bounds"
         );
 
-        MerkleProof {
+        let proof = MerkleProof {
             alg: self.alg,
             leaf_count: self.tree.leaves_len(),
             proof: self.tree.proof(indices),
-        }
+        };
+        println!("Merkle PROOF hashes: {:?}", proof.proof.proof_hashes());
+        proof
     }
 }
 
