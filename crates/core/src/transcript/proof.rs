@@ -90,6 +90,8 @@ impl TranscriptProof {
                 )
             })?;
 
+            // LOGG
+
             let (auth_sent, auth_recv) = proof.verify_with_provider(
                 provider,
                 commitment,

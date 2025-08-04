@@ -31,6 +31,8 @@ impl AttestationProof {
 
         let body = BodyProof::new(hasher, attestation.body.clone())?;
 
+        println!("BODY PROOF: {:?}", body.proof);
+
         Ok(Self {
             signature: attestation.signature.clone(),
             header: attestation.header.clone(),
@@ -97,11 +99,14 @@ impl BodyProof {
             .into_iter()
             .map(|(id, hash)| (id.0 as usize, hash))
             .unzip();
+        print!("LEAVES COUNT: {:?}", leaves);
 
         let mut tree = MerkleTree::new(hasher.id());
+        println!("Merkle TREEE {:?}", bincode::serialize(&tree));
         tree.insert(hasher, leaves);
 
         let proof = tree.proof(&indices);
+        println!("Merkle PROOF leaf count{:?}", proof.leaf_count());
 
         Ok(BodyProof { body, proof })
     }

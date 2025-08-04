@@ -37,6 +37,7 @@ mod proof;
 
 use std::fmt;
 
+use bincode::serialize;
 use rand::distr::{Distribution, StandardUniform};
 use serde::{Deserialize, Serialize};
 
@@ -176,6 +177,7 @@ impl Body {
             .map(|(_, hash)| hash)
             .collect::<Vec<_>>();
         tree.insert(hasher, fields);
+        println!("TREEE: {:?}", serialize(&tree));
         tree.root()
     }
 

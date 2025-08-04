@@ -294,6 +294,10 @@ mod secp256k1 {
 
         fn verify(&self, key: &VerifyingKey, msg: &[u8], sig: &[u8]) -> Result<(), SignatureError> {
             println!("secp256k1 verifier verify");
+
+            println!("key{:?}", key.data);
+            println!("msg {:?}", msg);
+            println!("sig {:?}", sig);
             if key.alg != KeyAlgId::K256 {
                 return Err(SignatureError("key algorithm is not k256".to_string()));
             }
@@ -302,7 +306,7 @@ mod secp256k1 {
                 .map_err(|_| SignatureError("invalid k256 key".to_string()))?;
             println!(
                 "key: to encoded point {:?}",
-                key.to_encoded_point(false).to_string()
+                key.to_encoded_point(false).as_bytes()
             );
 
             println!("sig: to bytes {:?}", encode(sig));

@@ -9,8 +9,12 @@ use clap::Parser;
 use tls_core::verify::WebPkiVerifier;
 use tls_server_fixture::CA_CERT_DER;
 use tlsn_core::{
+    attestation::{Extension, Field, Header},
+    connection::{ConnectionInfo, ServerCertCommitment, ServerEphemKey},
+    hash::{Hash, HashAlgId},
     presentation::{Presentation, PresentationOutput},
-    signing::VerifyingKey,
+    signing::{Signature, VerifyingKey},
+    transcript::TranscriptCommitment,
     CryptoProvider,
 };
 use tlsn_examples::ExampleType;
@@ -60,6 +64,16 @@ async fn verify_presentation(example_type: &ExampleType) -> Result<(), Box<dyn s
         hex::encode(key_data)
     );
 
+    // let json = serde_json::to_value(&presentation).unwrap();
+    // let attestation: AttestationProof =
+    //     serde_json::from_str(&json["attestation"].to_string()).unwrap();
+    // let verifying_key_data = &attestation.body.body.verifying_key.data;
+
+    // println!("Verifying key as Vec<u8>: {:?}", verifying_key_data);
+    // println!("Verifying key as hex: {:?}", verifying_key_data.data.len());
+
+    // println!("Attestation:{:?}", attestation);
+
     // Verify the presentation.
     let PresentationOutput {
         server_name,
@@ -92,3 +106,37 @@ async fn verify_presentation(example_type: &ExampleType) -> Result<(), Box<dyn s
 
     Ok(())
 }
+
+use serde::{Deserialize, Serialize};
+
+// // Proof of an attestation.
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct AttestationProof {
+//     pub signature: Signature,
+//     pub header: Header,
+//     pub body: BodyProof,
+// }
+
+// /// Proof of an attestation body.
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct BodyProof {
+//     pub body: Body,
+//     pub proof: MerkleProof,
+// }
+
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct MerkleProof {
+//     alg: HashAlgId,
+//     leaf_count: usize,
+//     proof: rs_merkle::MerkleProof<Hash>,
+// }
+
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct Body {
+//     pub verifying_key: Field<VerifyingKey>,
+//     pub connection_info: Field<ConnectionInfo>,
+//     pub server_ephemeral_key: Field<ServerEphemKey>,
+//     pub cert_commitment: Field<ServerCertCommitment>,
+//     pub extensions: Vec<Field<Extension>>,
+//     pub transcript_commitments: Vec<Field<TranscriptCommitment>>,
+// }

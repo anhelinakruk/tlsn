@@ -6503,6 +6503,8 @@ dependencies = [
  "hyper-util",
  "k256",
  "notary-client",
+ "rs_merkle",
+ "serde",
  "serde_json",
  "spansy",
  "tls-server-fixture",

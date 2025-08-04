@@ -40,6 +40,7 @@ tiny-keccak = { version = "2.0", features = ["keccak"] }
 web-time = { workspace = true }
 webpki-roots = { workspace = true }
 itybity = { workspace = true }
+bincode = { workspace = true }
 
 [dev-dependencies]
 alloy-primitives = { version = "0.8.22", default-features = false }

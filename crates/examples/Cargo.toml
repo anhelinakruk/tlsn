@@ -39,6 +39,8 @@ tokio = { workspace = true, features = [
   "io-std",
   "fs",
 ] }
+rs_merkle = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 tokio-util = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
