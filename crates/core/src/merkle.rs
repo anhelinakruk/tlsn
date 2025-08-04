@@ -42,6 +42,7 @@ impl MerkleProof {
         let mut leaves = leaves.into_iter().collect::<Vec<_>>();
         println!("HASHER: {:?}", hasher.id());
         print!("PROOF HASHES: {:?}", self.proof.proof_hashes());
+        print!("ROOT: {:?}", root.value);
 
         // Sort by index
         leaves.sort_by_key(|(idx, _)| *idx);
