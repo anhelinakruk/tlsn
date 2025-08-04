@@ -41,6 +41,7 @@ impl MerkleProof {
     ) -> Result<(), MerkleError> {
         let mut leaves = leaves.into_iter().collect::<Vec<_>>();
         println!("HASHER: {:?}", hasher.id());
+        print!("PROOF HASHES: {:?}", self.proof.proof_hashes());
 
         // Sort by index
         leaves.sort_by_key(|(idx, _)| *idx);
