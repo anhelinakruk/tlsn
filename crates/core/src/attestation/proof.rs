@@ -135,6 +135,7 @@ impl BodyProof {
             .map(|(id, hash)| (id.0 as usize, hash));
 
         println!("FIELDS: {:?}", fields);
+        println!("HEADER ROOT: {:?}", header.root.value);
 
         self.proof
             .verify(hasher, &header.root, fields)
