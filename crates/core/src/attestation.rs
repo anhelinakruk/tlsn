@@ -201,6 +201,31 @@ impl Body {
             transcript_commitments,
         } = self;
 
+        println!("Verifying key: {:?}", verifying_key.id);
+        println!("Verifying key data: {:?}", bcs::to_bytes(&verifying_key.data));
+        print!("Verifying key data len: {:?}\n",bcs::to_bytes(&verifying_key.data).unwrap().len());
+        println!("Verifying key data hashed: {:?}", hasher.hash_separated(&verifying_key.data));
+
+        println!("Connection info: {:?}", conn_info.id);
+        println!("Connection info data: {:?}", bcs::to_bytes(&conn_info.data));
+        print!("Connection info data len: {:?}\n", bcs::to_bytes(&conn_info.data).unwrap().len());  
+        println!("Connection info data hashed: {:?}", hasher.hash_separated(&conn_info.data));
+
+        println!("Server ephemeral key: {:?}", server_ephemeral_key.id);
+        println!("Server ephemeral key data: {:?}", bcs::to_bytes(&server_ephemeral_key.data));
+        print!("Server ephemeral key data len: {:?}\n", bcs::to_bytes(&server_ephemeral_key.data).unwrap().len());
+        println!("Server ephemeral key data hashed: {:?}", hasher.hash_separated(&server_ephemeral_key.data));
+
+        println!("Cert commitment: {:?}", cert_commitment.id);
+        println!("Cert commitment data: {:?}", bcs::to_bytes(&cert_commitment.data));
+        print!("Cert commitment data len: {:?}\n", bcs::to_bytes(&cert_commitment.data).unwrap().len());
+        println!("Cert commitment data hashed: {:?}", hasher.hash_separated(&cert_commitment.data));
+
+        println!("Transcript commitments: {:?}", transcript_commitments);   
+        println!("Transcript commitments data: {:?}", bcs::to_bytes(&transcript_commitments[0].data));
+        print!("Transcript commitments data len: {:?}\n", bcs::to_bytes(&transcript_commitments[0].data).unwrap().len());
+        println!("Transcript commitments data hashed: {:?}", hasher.hash_separated(&transcript_commitments[0].data));
+
         let mut fields: Vec<(FieldId, Hash)> = vec![
             (verifying_key.id, hasher.hash_separated(&verifying_key.data)),
             (conn_info.id, hasher.hash_separated(&conn_info.data)),

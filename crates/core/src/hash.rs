@@ -312,6 +312,8 @@ macro_rules! impl_domain_separator {
                     domain[..16].try_into().unwrap()
                 });
 
+                println!("Domain separator for {}: {:?}", stringify!($type), &*DOMAIN);
+                // Returns the first 16 bytes of the hash as the domain separator.
                 &*DOMAIN
             }
         }
