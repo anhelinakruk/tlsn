@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, io::Read};
 
 use rangeset::{RangeSet, UnionMut};
 use serde::{Deserialize, Serialize};
@@ -56,6 +56,8 @@ impl EncodingProof {
         let hasher = provider.hash.get(&commitment.root.alg)?;
 
         let encoder = new_encoder(&commitment.secret);
+        println!("SEED: {:?}", commitment.secret.seed());
+        println!("DELTA: {:?}", commitment.secret.delta());
         let Self {
             inclusion_proof,
             openings,
@@ -104,13 +106,23 @@ impl EncodingProof {
 
             expected_leaf.clear();
             for range in idx.iter_ranges() {
-                encoder.encode_data(*direction, range.clone(), &data[range], &mut expected_leaf);
+                let data_slice = &data[range.clone()];
+                let mut data_slice_new = data_slice.clone();
+                let mut data_raw = String::new();
+                data_slice_new.read_to_string(&mut data_raw).unwrap();
+                println!("DEBUG: Encoding data raw: {:?}", data_raw);
+                println!("DEBUG: Encoding data slice: {:?}, {:?}, {:?}", data_slice, &range, direction);
+                encoder.encode_data(*direction, range.clone(), data_slice, &mut expected_leaf);
             }
+            
+            println!("DEBUG: Before adding blinder - expected_leaf_len: {}", expected_leaf.len());
             expected_leaf.extend_from_slice(blinder.as_bytes());
 
             // Compute the expected hash of the commitment to make sure it is
             // present in the merkle tree.
-            leaves.push((*id, hasher.hash(&expected_leaf)));
+            let hash = hasher.hash(&expected_leaf); 
+            println!("DEBUG: Expected leaf hash: {:?}", hash);
+            leaves.push((*id, hash));
 
             auth.union_mut(idx.as_range_set());
         }

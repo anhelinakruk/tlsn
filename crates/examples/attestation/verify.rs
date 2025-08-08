@@ -72,7 +72,7 @@ async fn verify_presentation(example_type: &ExampleType) -> Result<(), Box<dyn s
     // println!("Verifying key as Vec<u8>: {:?}", verifying_key_data);
     // println!("Verifying key as hex: {:?}", verifying_key_data.data.len());
 
-    // println!("Attestation:{:?}", attestation);
+    // println!("Attestation:{:?}", attestation)
 
     // Verify the presentation.
     let PresentationOutput {
@@ -107,7 +107,6 @@ async fn verify_presentation(example_type: &ExampleType) -> Result<(), Box<dyn s
     Ok(())
 }
 
-use serde::{Deserialize, Serialize};
 
 // // Proof of an attestation.
 // #[derive(Debug, Clone, Serialize, Deserialize)]
