@@ -111,6 +111,8 @@ impl EncodingProof {
                 let mut data_raw = String::new();
                 data_slice_new.read_to_string(&mut data_raw).unwrap();
                 println!("DEBUG: Encoding data raw: {:?}", data_raw);
+                // Encode the data slice.
+                println!("Data slice len: {}", data_slice.len());
                 println!("DEBUG: Encoding data slice: {:?}, {:?}, {:?}", data_slice, &range, direction);
                 encoder.encode_data(*direction, range.clone(), data_slice, &mut expected_leaf);
             }
