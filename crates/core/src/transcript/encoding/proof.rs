@@ -120,7 +120,7 @@ impl EncodingProof {
             if expected_leaf.len() == 1408 {
                 println!("AMOUNT EXPECTED LEAF: {:?}", expected_leaf);
             }
-            println!("BLINDER: {:?}", blinder);
+            println!("BLINDER: {:?}", blinder.as_bytes());
             println!("DEBUG: Before adding blinder - expected_leaf_len: {}", expected_leaf.len());
             expected_leaf.extend_from_slice(blinder.as_bytes());
 
