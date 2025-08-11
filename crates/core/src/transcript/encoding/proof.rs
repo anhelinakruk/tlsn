@@ -138,6 +138,7 @@ impl EncodingProof {
         // seed being revealed. Ergo, if the encodings are authentic then the purported
         // data is authentic.
         inclusion_proof.verify(hasher, &commitment.root, leaves)?;
+        println!("COMMITMENT ROOT: {:?}", commitment.root);
 
         Ok((Idx(auth_sent), Idx(auth_recv)))
     }
