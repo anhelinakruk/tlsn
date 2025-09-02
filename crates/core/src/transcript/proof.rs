@@ -2,7 +2,7 @@
 
 use rangeset::{Cover, ToRangeSet};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, fmt};
+use std::{collections::HashSet, fmt, io::Read};
 
 use crate::{
     connection::TranscriptLength,
@@ -64,6 +64,7 @@ impl TranscriptProof {
                     }
                 }
                 TranscriptCommitment::Hash(plaintext_hash) => {
+                    println!("Found hash commitment: {:?}", plaintext_hash);
                     hash_commitments.insert(plaintext_hash);
                 }
             }
@@ -118,10 +119,16 @@ impl TranscriptProof {
                 )
             })?;
 
-            let (plaintext, auth) = match direction {
+            println!("Hasher: {:?}", hasher.id());
+
+            let (mut plaintext, auth) = match direction {
                 Direction::Sent => (self.transcript.sent_unsafe(), &mut total_auth_sent),
                 Direction::Received => (self.transcript.received_unsafe(), &mut total_auth_recv),
             };
+
+            let mut buf = String::new();
+            plaintext.read_to_string(&mut buf).unwrap();
+            println!("Plaintext: {:?}", buf);
 
             if idx.end() > plaintext.len() {
                 return Err(TranscriptProofError::new(
@@ -140,6 +147,8 @@ impl TranscriptProof {
                 idx,
                 hash: hash_plaintext(hasher, &buffer, &blinder),
             };
+
+            println!("Expected hash: {:?}", expected);
 
             if !hash_commitments.contains(&expected) {
                 return Err(TranscriptProofError::new(
