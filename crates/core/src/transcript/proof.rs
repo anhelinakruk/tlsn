@@ -121,14 +121,14 @@ impl TranscriptProof {
 
             println!("Hasher: {:?}", hasher.id());
 
-            let (mut plaintext, auth) = match direction {
+            let (plaintext, auth) = match direction {
                 Direction::Sent => (self.transcript.sent_unsafe(), &mut total_auth_sent),
                 Direction::Received => (self.transcript.received_unsafe(), &mut total_auth_recv),
             };
 
-            let mut buf = String::new();
-            plaintext.read_to_string(&mut buf).unwrap();
-            println!("Plaintext: {:?}", buf);
+            // let mut buf = String::new();
+            // plaintext.read_to_string(&mut buf).unwrap();
+            // println!("Plaintext: {:?}", buf);
 
             if idx.end() > plaintext.len() {
                 return Err(TranscriptProofError::new(
