@@ -129,6 +129,7 @@ impl TranscriptProof {
             // let mut buf = String::new();
             // plaintext.read_to_string(&mut buf).unwrap();
             println!("Plaintext: {:?}",plaintext);
+            println!("Blinder: {:?}",blinder);
 
             if idx.end() > plaintext.len() {
                 return Err(TranscriptProofError::new(
