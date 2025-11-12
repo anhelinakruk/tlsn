@@ -13,7 +13,7 @@ use rangeset::RangeSet;
 use serde::{Deserialize, Serialize};
 use serio::{SinkExt, stream::IoStreamExt};
 use tlsn_core::{
-    hash::{Blake3, HashAlgId, HashAlgorithm, Keccak256, Sha256},
+    hash::{Blake3, HashAlgId, HashAlgorithm, Keccak256, Poseidon2, Sha256},
     transcript::{
         Direction,
         encoding::{
@@ -100,6 +100,7 @@ pub(crate) async fn receive<M: MacStore>(
         HashAlgId::SHA256 => &Sha256::default(),
         HashAlgId::KECCAK256 => &Keccak256::default(),
         HashAlgId::BLAKE3 => &Blake3::default(),
+        HashAlgId::POSEIDON2 => &Poseidon2::default(),
         alg => {
             return Err(ErrorRepr::UnsupportedHashAlgorithm(alg).into());
         }

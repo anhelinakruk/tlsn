@@ -126,6 +126,7 @@ js-sys = { version = "0.3" }
 k256 = { version = "0.13" }
 log = { version = "0.4" }
 once_cell = { version = "1.19" }
+poseidon2_m31 = { git = "https://github.com/anhelinakruk/poseidon2_m31" }
 opaque-debug = { version = "0.3" }
 p256 = { version = "0.13" }
 pin-project-lite = { version = "0.2" }

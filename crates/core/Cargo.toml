@@ -34,6 +34,7 @@ bimap = { version = "0.6", features = ["serde"] }
 blake3 = { workspace = true }
 hex = { workspace = true, optional = true }
 opaque-debug = { workspace = true }
+poseidon2_m31 = { workspace = true }
 rand = { workspace = true }
 rand_core = { workspace = true }
 rand_chacha = { workspace = true }

@@ -25,6 +25,7 @@ impl Default for HashProvider {
         algs.insert(HashAlgId::SHA256, Box::new(Sha256::default()));
         algs.insert(HashAlgId::BLAKE3, Box::new(Blake3::default()));
         algs.insert(HashAlgId::KECCAK256, Box::new(Keccak256::default()));
+        algs.insert(HashAlgId::POSEIDON2, Box::new(Poseidon2::default()));
 
         Self { algs }
     }
@@ -66,6 +67,8 @@ impl HashAlgId {
     pub const BLAKE3: Self = Self(2);
     /// Keccak-256 hash algorithm.
     pub const KECCAK256: Self = Self(3);
+    /// Poseidon2 hash algorithm over M31 field.
+    pub const POSEIDON2: Self = Self(4);
 
     /// Creates a new hash algorithm identifier.
     ///
@@ -368,3 +371,130 @@ mod keccak {
 }
 
 pub use keccak::Keccak256;
+
+mod poseidon2 {
+    use poseidon2_m31::{Poseidon2Sponge, stwo::core::fields::m31::BaseField};
+
+    /// Poseidon2 hash algorithm over M31 field.
+    #[derive(Default, Clone)]
+    pub struct Poseidon2 {}
+
+    impl super::HashAlgorithm for Poseidon2 {
+        fn id(&self) -> super::HashAlgId {
+            super::HashAlgId::POSEIDON2
+        }
+
+        fn hash(&self, data: &[u8]) -> super::Hash {
+            let mut sponge = Poseidon2Sponge::new();
+
+            // Convert bytes to BaseField elements
+            for &byte in data {
+                sponge.absorb(BaseField::from_u32_unchecked(byte as u32));
+            }
+
+            // Get 8 field elements (32 bytes total)
+            let result = sponge.finalize_full_rate();
+
+            // Convert field elements to bytes
+            let mut output = Vec::with_capacity(32);
+            for elem in result.iter() {
+                // BaseField is M31, stored as u32
+                let value = elem.0;
+                output.extend_from_slice(&value.to_le_bytes());
+            }
+
+            super::Hash::new(&output)
+        }
+
+        fn hash_prefixed(&self, prefix: &[u8], data: &[u8]) -> super::Hash {
+            let mut sponge = Poseidon2Sponge::new();
+
+            // Absorb prefix
+            for &byte in prefix {
+                sponge.absorb(BaseField::from_u32_unchecked(byte as u32));
+            }
+
+            // Absorb data
+            for &byte in data {
+                sponge.absorb(BaseField::from_u32_unchecked(byte as u32));
+            }
+
+            // Get 8 field elements (32 bytes total)
+            let result = sponge.finalize_full_rate();
+
+            // Convert field elements to bytes
+            let mut output = Vec::with_capacity(32);
+            for elem in result.iter() {
+                let value = elem.0;
+                output.extend_from_slice(&value.to_le_bytes());
+            }
+
+            super::Hash::new(&output)
+        }
+    }
+}
+
+pub use poseidon2::Poseidon2;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_poseidon2_basic_hash() {
+        let poseidon = Poseidon2::default();
+        let data = b"Hello, Poseidon2!";
+
+        let hash = poseidon.hash(data);
+
+        // Verify hash is deterministic
+        let hash2 = poseidon.hash(data);
+        assert_eq!(hash.as_bytes(), hash2.as_bytes(), "Hash should be deterministic");
+
+        // Verify different data produces different hash
+        let hash3 = poseidon.hash(b"Different data");
+        assert_ne!(hash.as_bytes(), hash3.as_bytes(), "Different inputs should produce different hashes");
+    }
+
+    #[test]
+    fn test_poseidon2_prefixed_hash() {
+        let poseidon = Poseidon2::default();
+        let prefix = b"prefix:";
+        let data = b"data";
+
+        let hash = poseidon.hash_prefixed(prefix, data);
+
+        // Verify it's different from non-prefixed
+        let hash_no_prefix = poseidon.hash(data);
+        assert_ne!(hash.as_bytes(), hash_no_prefix.as_bytes(), "Prefixed hash should differ from non-prefixed");
+
+        // Verify deterministic
+        let hash2 = poseidon.hash_prefixed(prefix, data);
+        assert_eq!(hash.as_bytes(), hash2.as_bytes(), "Prefixed hash should be deterministic");
+    }
+
+    #[test]
+    fn test_poseidon2_algorithm_id() {
+        let poseidon = Poseidon2::default();
+        assert_eq!(poseidon.id(), HashAlgId::POSEIDON2);
+        assert_eq!(HashAlgId::POSEIDON2.as_u8(), 4);
+    }
+
+    #[test]
+    fn test_poseidon2_in_hash_provider() {
+        let provider = HashProvider::default();
+
+        // Verify Poseidon2 is available in default provider
+        let hasher = provider.get(&HashAlgId::POSEIDON2).expect("Poseidon2 should be in default provider");
+
+        let data = b"test data";
+        let hash = hasher.hash(data);
+
+        // Verify hash has correct algorithm ID
+        let typed_hash = TypedHash {
+            alg: hasher.id(),
+            value: hash,
+        };
+        assert_eq!(typed_hash.alg, HashAlgId::POSEIDON2);
+    }
+}
