@@ -31,6 +31,7 @@ aead = { workspace = true, features = ["alloc"], optional = true }
 aes-gcm = { workspace = true, optional = true }
 generic-array = { workspace = true, optional = true }
 bimap = { version = "0.6", features = ["serde"] }
+blake2 = { workspace = true }
 blake3 = { workspace = true }
 hex = { workspace = true, optional = true }
 opaque-debug = { workspace = true }

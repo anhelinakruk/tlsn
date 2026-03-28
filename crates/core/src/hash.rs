@@ -25,6 +25,7 @@ impl Default for HashProvider {
         algs.insert(HashAlgId::SHA256, Box::new(Sha256::default()));
         algs.insert(HashAlgId::BLAKE3, Box::new(Blake3::default()));
         algs.insert(HashAlgId::KECCAK256, Box::new(Keccak256::default()));
+        algs.insert(HashAlgId::BLAKE2S, Box::new(Blake2s::default()));
 
         Self { algs }
     }
@@ -66,6 +67,8 @@ impl HashAlgId {
     pub const BLAKE3: Self = Self(2);
     /// Keccak-256 hash algorithm.
     pub const KECCAK256: Self = Self(3);
+     /// BLAKE2S hash algorithm.
+    pub const BLAKE2S: Self = Self(4);
 
     /// Creates a new hash algorithm identifier.
     ///
@@ -368,3 +371,32 @@ mod keccak {
 }
 
 pub use keccak::Keccak256;
+
+mod blake2s {
+    use ::blake2::Digest;
+
+    /// BLAKE2S hash algorithm.
+    #[derive(Default, Clone)]
+    pub struct Blake2s {}
+
+    impl super::HashAlgorithm for Blake2s {
+        fn id(&self) -> super::HashAlgId {
+            super::HashAlgId::BLAKE2S
+        }
+
+        fn hash(&self, data: &[u8]) -> super::Hash {
+            let mut hasher = ::blake2::Blake2s256::default();
+            hasher.update(data);
+            super::Hash::new(hasher.finalize().as_ref())
+        }
+
+        fn hash_prefixed(&self, prefix: &[u8], data: &[u8]) -> super::Hash {
+            let mut hasher = ::blake2::Blake2s256::default();
+            hasher.update(prefix);
+            hasher.update(data);
+            super::Hash::new(hasher.finalize().as_ref())
+        }
+    }
+}
+
+pub use blake2s::Blake2s;

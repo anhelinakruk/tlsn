@@ -65,21 +65,21 @@ tlsn-sdk-core = { path = "crates/sdk-core" }
 tlsn-wasm = { path = "crates/wasm" }
 tlsn = { path = "crates/tlsn" }
 
-mpz-circuits = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-circuits-data = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-memory-core = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-common = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-core = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-vm-core = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-garble = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-garble-core = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-ole = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-ot = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-share-conversion = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-fields = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-zk = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-hash = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
-mpz-ideal-vm = { git = "https://github.com/privacy-ethereum/mpz", tag = "v0.1.0-alpha.5" }
+mpz-circuits = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s" }
+mpz-circuits-data = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-memory-core = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-common = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-core = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-vm-core = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-garble = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-garble-core = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-ole = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-ot = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-share-conversion = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-fields = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-zk = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-hash = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
+mpz-ideal-vm = { git = "https://github.com/anhelinakruk/mpz", branch = "feat/blake2s"}
 
 futures-plex = { git = "https://github.com/tlsnotary/tlsn-utils", rev = "dd419bf" }
 rangeset = { version = "0.4" }
@@ -96,6 +96,7 @@ async-trait = { version = "0.1" }
 axum = { version = "0.8" }
 bcs = { version = "0.1" }
 bincode = { version = "1.3" }
+blake2 = { version = "0.10" }
 blake3 = { version = "1.5" }
 bon = { version = "3.6" }
 bytes = { version = "1.4" }
