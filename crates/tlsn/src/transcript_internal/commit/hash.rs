@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use mpz_core::bitvec::BitVec;
-use mpz_hash::{blake3::Blake3, keccak256::Keccak256, sha256::Sha256};
+use mpz_hash::{blake2s::Blake2s, blake3::Blake3, keccak256::Keccak256, sha256::Sha256};
 use mpz_memory_core::{
     DecodeFutureTyped, MemoryExt, Vector,
     binary::{Binary, U8},
@@ -112,6 +112,7 @@ enum Hasher {
     Sha256(Sha256),
     Blake3(Blake3),
     Keccak256(Keccak256),
+    Blake2s(Blake2s)
 }
 
 /// Commit plaintext hashes of the transcript.
@@ -211,7 +212,31 @@ fn hash_commit_inner(
                     .update(vm, &blinder)
                     .map_err(HashCommitError::hasher)?;
                 hasher.finalize(vm).map_err(HashCommitError::hasher)?
-            }
+            },
+            HashAlgId::BLAKE2S => {
+                let mut hasher = if let Some(Hasher::Blake2s(hasher)) = hashers.get(&alg).cloned() {
+                    hasher
+                } else {
+                    let hasher = Blake2s::new(vm).map_err(HashCommitError::hasher)?;
+                    hashers.insert(alg, Hasher::Blake2s(hasher.clone()));
+                    hasher
+                };
+
+                let refs = match direction {
+                    Direction::Sent => &refs.sent,
+                    Direction::Received => &refs.recv,
+                };
+
+                for range in idx.iter() {
+                    hasher
+                        .update(vm, &refs.get(range).expect("plaintext refs are valid"))
+                        .map_err(HashCommitError::hasher)?;
+                }
+                hasher
+                    .update(vm, &blinder)
+                    .map_err(HashCommitError::hasher)?;
+                hasher.finalize(vm).map_err(HashCommitError::hasher)?
+            },
             alg => {
                 return Err(HashCommitError::unsupported_alg(alg));
             }
