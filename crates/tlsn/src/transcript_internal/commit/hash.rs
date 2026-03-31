@@ -68,7 +68,11 @@ pub(crate) fn prove_hash(
     for (direction, idx, alg, hash_ref, blinder_ref) in
         hash_commit_inner(vm, Role::Prover, refs, idxs)?
     {
-        let blinder: Blinder = rand::random();
+        let blinder = if alg == HashAlgId::BLAKE2S {
+            Blinder::random_m31()
+        } else {
+            rand::random()
+        };
 
         vm.assign(blinder_ref, blinder.as_bytes().to_vec())?;
         vm.commit(blinder_ref)?;

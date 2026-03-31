@@ -252,6 +252,27 @@ impl Blinder {
     pub fn as_bytes(&self) -> &[u8] {
         &self.0
     }
+
+    /// Generates a blinder whose 16 bytes form 4 valid M31 field elements.
+    ///
+    /// BLAKE2s interprets its input as little-endian u32 words. When the VM
+    /// backend uses M31 arithmetic (modulus 2^31 - 1), each such word must be
+    /// strictly less than 2^31 - 1. This method uses rejection sampling to
+    /// guarantee that property without introducing statistical bias.
+    pub fn random_m31() -> Self {
+        const M31: u32 = (1u32 << 31) - 1;
+        let mut bytes = [0u8; 16];
+        for chunk in bytes.chunks_exact_mut(4) {
+            loop {
+                let v = rand::random::<u32>();
+                if v < M31 {
+                    chunk.copy_from_slice(&v.to_le_bytes());
+                    break;
+                }
+            }
+        }
+        Blinder(bytes)
+    }
 }
 
 impl Distribution<Blinder> for StandardUniform {
