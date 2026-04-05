@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use mpz_core::bitvec::BitVec;
-use mpz_hash::{blake2s::Blake2s, blake3::Blake3, keccak256::Keccak256, sha256::Sha256};
+use mpz_hash::{blake2s::Blake2s, blake3::Blake3, keccak256::Keccak256, poseidon::Poseidon2, sha256::Sha256};
 use mpz_memory_core::{
     DecodeFutureTyped, MemoryExt, Vector,
     binary::{Binary, U8},
@@ -116,7 +116,7 @@ enum Hasher {
     Sha256(Sha256),
     Blake3(Blake3),
     Keccak256(Keccak256),
-    Blake2s(Blake2s)
+    Blake2s(Blake2s),
 }
 
 /// Commit plaintext hashes of the transcript.
@@ -241,6 +241,21 @@ fn hash_commit_inner(
                     .map_err(HashCommitError::hasher)?;
                 hasher.finalize(vm).map_err(HashCommitError::hasher)?
             },
+            HashAlgId::POSEIDON2 => {
+                let refs = match direction {
+                    Direction::Sent => &refs.sent,
+                    Direction::Received => &refs.recv,
+                };
+
+                let mut hasher = Poseidon2::new();
+                for range in idx.iter() {
+                    hasher
+                        .update(vm, &refs.get(range).expect("plaintext refs are valid"))
+                        .map_err(HashCommitError::hasher)?;
+                }
+                hasher.update(vm, &blinder).map_err(HashCommitError::hasher)?;
+                hasher.finalize(vm).map_err(HashCommitError::hasher)?
+            }
             alg => {
                 return Err(HashCommitError::unsupported_alg(alg));
             }
@@ -251,6 +266,7 @@ fn hash_commit_inner(
 
     Ok(output)
 }
+
 
 /// Error type for hash commitments.
 #[derive(Debug, thiserror::Error)]
@@ -296,5 +312,64 @@ enum ErrorRepr {
 impl From<VmError> for HashCommitError {
     fn from(value: VmError) -> Self {
         Self(ErrorRepr::Vm(value))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use mpz_common::context::test_st_context;
+    use mpz_ideal_vm::IdealVm;
+    use mpz_vm_core::prelude::*;
+    use tlsn_core::hash::{HashAlgorithm, Poseidon2 as NativePoseidon2};
+
+    use super::*;
+
+    async fn vm_poseidon2(data: &[u8], blinder: &[u8]) -> [u8; 32] {
+        let (mut ctx, _) = test_st_context(1024);
+        let mut vm = IdealVm::default();
+
+        let mut hasher = Poseidon2::new();
+
+        if !data.is_empty() {
+            let data_ref = vm.alloc_vec::<U8>(data.len()).unwrap();
+            vm.mark_public(data_ref).unwrap();
+            vm.assign(data_ref, data.to_vec()).unwrap();
+            vm.commit(data_ref).unwrap();
+            hasher.update(&mut vm, &data_ref).unwrap();
+        }
+
+        if !blinder.is_empty() {
+            let blinder_ref = vm.alloc_vec::<U8>(blinder.len()).unwrap();
+            vm.mark_public(blinder_ref).unwrap();
+            vm.assign(blinder_ref, blinder.to_vec()).unwrap();
+            vm.commit(blinder_ref).unwrap();
+            hasher.update(&mut vm, &blinder_ref).unwrap();
+        }
+
+        let hash_ref = hasher.finalize(&mut vm).unwrap();
+        let mut fut = vm.decode(Vector::<U8>::from(hash_ref)).unwrap();
+        vm.execute_all(&mut ctx).await.unwrap();
+
+        let bytes: Vec<u8> = fut.try_recv().unwrap().unwrap();
+        bytes.try_into().unwrap()
+    }
+
+    #[rstest::rstest]
+    #[case::empty(b"" as &[u8], b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" as &[u8])]
+    #[case::short(b"hello", b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10")]
+    #[case::one_full_block(b"12345678", b"\xaa\xbb\xcc\xdd\xee\xff\x11\x22\x33\x44\x55\x66\x77\x88\x99\x00")]
+    #[case::multi_block(b"the quick brown fox jumps over", b"\xde\xad\xbe\xef\xca\xfe\xba\xbe\x01\x23\x45\x67\x89\xab\xcd\xef")]
+    #[tokio::test]
+    async fn test_poseidon2_vm_matches_native(#[case] data: &[u8], #[case] blinder: &[u8]) {
+        let vm_hash = vm_poseidon2(data, blinder).await;
+
+        let hasher = NativePoseidon2::default();
+        let native_hash = hasher.hash_prefixed(data, blinder);
+
+        assert_eq!(
+            vm_hash,
+            native_hash.as_bytes(),
+            "VM Poseidon2 hash != native for data={data:?} blinder={blinder:?}"
+        );
     }
 }
