@@ -580,10 +580,12 @@ mod poseidon2 {
         }
 
         fn hash(&self, data: &[u8]) -> super::Hash {
+            println!("Poseidon native hasher");
             super::Hash::new(&hash_bytes(data))
         }
 
         fn hash_prefixed(&self, prefix: &[u8], data: &[u8]) -> super::Hash {
+            println!("Poseidon native hasher");
             let mut combined = Vec::with_capacity(prefix.len() + data.len());
             combined.extend_from_slice(prefix);
             combined.extend_from_slice(data);

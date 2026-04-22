@@ -1,7 +1,59 @@
 use std::{
     env,
+    io::Result as IoResult,
     net::{IpAddr, SocketAddr},
+    pin::Pin,
+    sync::{Arc, atomic::{AtomicU64, Ordering}},
+    task::{Context, Poll},
 };
+
+use pin_project_lite::pin_project;
+use tokio::io::ReadBuf;
+
+pin_project! {
+    struct Meter<Io> {
+        sent: Arc<AtomicU64>,
+        recv: Arc<AtomicU64>,
+        #[pin] io: Io,
+    }
+}
+
+impl<Io> Meter<Io> {
+    fn new(io: Io) -> Self {
+        Self {
+            sent: Arc::new(AtomicU64::new(0)),
+            recv: Arc::new(AtomicU64::new(0)),
+            io,
+        }
+    }
+    fn sent(&self) -> Arc<AtomicU64> { self.sent.clone() }
+    fn recv(&self) -> Arc<AtomicU64> { self.recv.clone() }
+}
+
+impl<Io: AsyncWrite> AsyncWrite for Meter<Io> {
+    fn poll_write(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<IoResult<usize>> {
+        let this = self.project();
+        this.io.poll_write(cx, buf).map(|r| {
+            r.inspect(|n| { this.sent.fetch_add(*n as u64, Ordering::Relaxed); })
+        })
+    }
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<IoResult<()>> {
+        self.project().io.poll_flush(cx)
+    }
+    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<IoResult<()>> {
+        self.project().io.poll_shutdown(cx)
+    }
+}
+
+impl<Io: AsyncRead> AsyncRead for Meter<Io> {
+    fn poll_read(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<IoResult<()>> {
+        let this = self.project();
+        let before = buf.filled().len();
+        let result = this.io.poll_read(cx, buf);
+        this.recv.fetch_add((buf.filled().len() - before) as u64, Ordering::Relaxed);
+        result
+    }
+}
 
 use anyhow::Result;
 use http_body_util::Empty;
@@ -20,11 +72,13 @@ use tlsn::{
         verifier::VerifierConfig,
     },
     connection::ServerName,
-    transcript::PartialTranscript,
+    hash::HashAlgId,
+    transcript::{Direction, PartialTranscript, TranscriptCommitConfig, TranscriptCommitmentKind},
     verifier::VerifierOutput,
     webpki::{CertificateDer, RootCertStore},
     Session,
 };
+
 use tlsn_server_fixture::DEFAULT_FIXTURE_PORT;
 use tlsn_server_fixture_certs::{CA_CERT_DER, SERVER_DOMAIN};
 
@@ -52,9 +106,22 @@ async fn main() {
 
     // Connect prover and verifier.
     let (prover_socket, verifier_socket) = tokio::io::duplex(1 << 23);
-    let prover = prover(prover_socket, &server_addr, &uri);
+    let meter = Meter::new(prover_socket);
+    let sent = meter.sent();
+    let recv = meter.recv();
+
+    let prover = prover(meter, &server_addr, &uri, sent.clone(), recv.clone());
     let verifier = verifier(verifier_socket);
     let (_, transcript) = tokio::try_join!(prover, verifier).unwrap();
+
+    let total_sent = sent.load(Ordering::Relaxed);
+    let total_recv = recv.load(Ordering::Relaxed);
+    println!(
+        "Network usage — sent: {:.1} KB, recv: {:.1} KB, total: {:.1} KB",
+        total_sent as f64 / 1024.0,
+        total_recv as f64 / 1024.0,
+        (total_sent + total_recv) as f64 / 1024.0,
+    );
 
     println!("Successfully verified {}", &uri);
     println!(
@@ -67,11 +134,13 @@ async fn main() {
     );
 }
 
-#[instrument(skip(verifier_socket))]
+#[instrument(skip(verifier_socket, sent, recv))]
 async fn prover<T: AsyncWrite + AsyncRead + Send + Unpin + 'static>(
     verifier_socket: T,
     server_addr: &SocketAddr,
     uri: &str,
+    sent: Arc<AtomicU64>,
+    recv: Arc<AtomicU64>,
 ) -> Result<()> {
     let uri = uri.parse::<Uri>().unwrap();
     assert_eq!(uri.scheme().unwrap().as_str(), "https");
@@ -175,9 +244,29 @@ async fn prover<T: AsyncWrite + AsyncRead + Send + Unpin + 'static>(
     builder.reveal_recv(&(0..pos))?;
     builder.reveal_recv(&(pos + 4..prover.transcript().received().len()))?;
 
+    // Add Poseidon2 hash commitments for the first 50 bytes of each direction.
+    let sent_len = prover.transcript().sent().len();
+    let recv_len = prover.transcript().received().len();
+    let kind = TranscriptCommitmentKind::Hash { alg: HashAlgId::POSEIDON2 };
+    let mut commit_builder = TranscriptCommitConfig::builder(prover.transcript());
+    commit_builder.commit_with_kind(&(0..50.min(sent_len)), Direction::Sent, kind)?;
+    commit_builder.commit_with_kind(&(0..50.min(recv_len)), Direction::Received, kind)?;
+    builder.transcript_commit(commit_builder.build()?);
+
     let config = builder.build()?;
 
+    let prove_sent_before = sent.load(Ordering::Relaxed);
+    let prove_recv_before = recv.load(Ordering::Relaxed);
     prover.prove(&config).await?;
+    let prove_sent = sent.load(Ordering::Relaxed) - prove_sent_before;
+    let prove_recv = recv.load(Ordering::Relaxed) - prove_recv_before;
+    println!(
+        "prove() — sent: {:.1} KB, recv: {:.1} KB, total: {:.1} KB",
+        prove_sent as f64 / 1024.0,
+        prove_recv as f64 / 1024.0,
+        (prove_sent + prove_recv) as f64 / 1024.0,
+    );
+
     prover.close().await?;
 
     // Close the session and wait for the driver to complete.
