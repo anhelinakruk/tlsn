@@ -15,24 +15,15 @@ use tokio_util::compat::{FuturesAsyncReadCompatExt, TokioAsyncReadCompatExt};
 use tracing::info;
 
 use tlsn::{
-    attestation::{
-        request::{Request as AttestationRequest, RequestConfig},
-        signing::Secp256k1Signer,
-        Attestation, AttestationConfig, CryptoProvider,
-    },
-    config::{
+    Session, attestation::{
+        Attestation, AttestationConfig, CryptoProvider, request::{Request as AttestationRequest, RequestConfig}, signing::Secp256k1Signer
+    }, config::{
         prove::ProveConfig,
         prover::ProverConfig,
         tls::TlsClientConfig,
-        tls_commit::{mpc::MpcTlsConfig, TlsCommitConfig},
+        tls_commit::{TlsCommitConfig, mpc::MpcTlsConfig},
         verifier::VerifierConfig,
-    },
-    connection::{ConnectionInfo, HandshakeData, ServerName, TranscriptLength},
-    prover::ProverOutput,
-    transcript::{ContentType, TranscriptCommitConfig},
-    verifier::VerifierOutput,
-    webpki::{CertificateDer, PrivateKeyDer, RootCertStore},
-    Session,
+    }, connection::{ConnectionInfo, HandshakeData, ServerName, TranscriptLength}, hash::HashAlgId, prover::ProverOutput, transcript::{ContentType, TranscriptCommitConfig}, verifier::VerifierOutput, webpki::{CertificateDer, PrivateKeyDer, RootCertStore}
 };
 use tlsn_examples::ExampleType;
 use tlsn_formats::http::{DefaultHttpCommitter, HttpCommit, HttpTranscript};
@@ -199,6 +190,7 @@ async fn prover<S: AsyncWrite + AsyncRead + Send + Sync + Unpin + 'static>(
     let mut builder = RequestConfig::builder();
 
     builder.transcript_commit(transcript_commit);
+    builder.hash_alg(HashAlgId::POSEIDON2);
 
     // Optionally, add an extension to the attestation if the notary supports it.
     // builder.extension(Extension {

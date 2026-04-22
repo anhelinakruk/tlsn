@@ -30,7 +30,7 @@ futures-plex = { workspace = true }
 serio = { workspace = true, features = ["compat"] }
 web-spawn = { workspace = true, optional = true }
 
-mpz-circuits = { workspace = true, features = ["aes"] }
+mpz-circuits = { workspace = true, features = ["aes", "poseidon"] }
 mpz-common = { workspace = true }
 mpz-core = { workspace = true }
 mpz-garble = { workspace = true }

@@ -30,6 +30,12 @@ const DEFAULT_COMMITMENT_KINDS: &[TranscriptCommitmentKind] = &[
     TranscriptCommitmentKind::Hash {
         alg: HashAlgId::KECCAK256,
     },
+    TranscriptCommitmentKind::Hash { 
+        alg: HashAlgId::BLAKE2S
+    },
+    TranscriptCommitmentKind::Hash { 
+        alg: HashAlgId::POSEIDON2
+    }
 ];
 
 /// Proof of the contents of a transcript.
@@ -536,6 +542,8 @@ mod tests {
     #[case::sha256(HashAlgId::SHA256)]
     #[case::blake3(HashAlgId::BLAKE3)]
     #[case::keccak256(HashAlgId::KECCAK256)]
+    #[case::blake2s(HashAlgId::BLAKE2S)]
+    #[case::poseidon2(HashAlgId::POSEIDON2)]
     fn test_reveal_with_hash_commitment(#[case] alg: HashAlgId) {
         let mut rng = rand::rngs::StdRng::seed_from_u64(0);
         let provider = HashProvider::default();
@@ -584,6 +592,7 @@ mod tests {
     #[case::sha256(HashAlgId::SHA256)]
     #[case::blake3(HashAlgId::BLAKE3)]
     #[case::keccak256(HashAlgId::KECCAK256)]
+    #[case::blake2s(HashAlgId::BLAKE2S)]
     fn test_reveal_with_inconsistent_hash_commitment(#[case] alg: HashAlgId) {
         let mut rng = rand::rngs::StdRng::seed_from_u64(0);
         let provider = HashProvider::default();
@@ -705,7 +714,7 @@ mod tests {
             let secret = PlaintextHashSecret {
                 direction: Direction::Received,
                 idx: rangeset.clone(),
-                alg: HashAlgId::BLAKE3,
+                alg: HashAlgId::BLAKE2S,
                 blinder,
             };
             secrets.push(TranscriptSecret::Hash(secret));
@@ -775,7 +784,7 @@ mod tests {
             let secret = PlaintextHashSecret {
                 direction: Direction::Sent,
                 idx: rangeset.clone(),
-                alg: HashAlgId::BLAKE3,
+                alg: HashAlgId::BLAKE2S,
                 blinder,
             };
             secrets.push(TranscriptSecret::Hash(secret));
@@ -785,7 +794,7 @@ mod tests {
             let secret = PlaintextHashSecret {
                 direction: Direction::Received,
                 idx: rangeset.clone(),
-                alg: HashAlgId::BLAKE3,
+                alg: HashAlgId::BLAKE2S,
                 blinder,
             };
             secrets.push(TranscriptSecret::Hash(secret));
